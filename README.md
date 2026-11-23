@@ -1,4 +1,3 @@
-# 
 # VELMORA
 
 **Un universo de inversiones a tu alcance.**
@@ -22,6 +21,16 @@ filtrar alternativas según las preferencias del usuario.
 - Despliegue: Vercel
 - Control de versiones: Git y GitHub
 
+## Inicio rápido
+
+```bash
+git clone https://github.com/aristizabal7m/Velmora.git
+cd Velmora
+```
+
+El código de `apps/api` y `apps/web` se incorporará en las siguientes
+fases; los comandos de ejecución se documentarán entonces.
+
 ## Patrones de diseño
 
 ### Creacionales
@@ -41,8 +50,11 @@ filtrar alternativas según las preferencias del usuario.
 El proyecto utiliza un monorepo con una API,
 una aplicación web y migraciones de base de datos.
 
-Las decisiones de arquitectura se documentan en
-[docs/adr](docs/adr/README.md).
+## Documentación
+
+- [Decisiones arquitectónicas (ADR)](docs/adr/README.md)
+- [Código de conducta](CODE_OF_CONDUCT.md)
+- [Licencia MIT](LICENSE)
 
 ## Estado
 

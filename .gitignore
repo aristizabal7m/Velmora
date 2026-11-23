@@ -18,7 +18,6 @@ supabase/.temp/
 .DS_Store
 .vscode/
 .idea/
-EOF
 
 # C extensions
 *.so
@@ -168,6 +167,8 @@ activemq-data/
 
 # Environments
 .env
+.env.*
+!.env.example
 .envrc
 .venv
 env/
