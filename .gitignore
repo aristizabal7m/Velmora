@@ -3,6 +3,23 @@ __pycache__/
 *.py[codz]
 *$py.class
 
+# Node.js y React
+node_modules/
+dist/
+coverage/
+
+# Vercel
+.vercel/
+
+# Supabase local
+supabase/.temp/
+
+# Sistema y editor
+.DS_Store
+.vscode/
+.idea/
+EOF
+
 # C extensions
 *.so
 
