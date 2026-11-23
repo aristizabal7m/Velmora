@@ -1,0 +1,26 @@
+{
+  "name": "velmora",
+  "version": "1.0.0",
+  "description": "**Un universo de inversiones a tu alcance.**",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aristizabal7m/Velmora.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/aristizabal7m/Velmora/issues"
+  },
+  "homepage": "https://github.com/aristizabal7m/Velmora#readme",
+  "devDependencies": {
+    "supabase": "^3.2.0"
+  }
+}
