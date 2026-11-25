@@ -7,7 +7,9 @@
     "doc": "docs"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "npm --prefix apps/web test && uv run --directory apps/api pytest -q",
+    "check": "npm --prefix apps/web run typecheck && npm --prefix apps/web run lint && uv run --directory apps/api ruff check . && uv run --directory apps/api mypy src tests",
+    "db:test": "supabase db reset && supabase test db"
   },
   "repository": {
     "type": "git",
@@ -15,7 +17,7 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/aristizabal7m/Velmora/issues"
   },

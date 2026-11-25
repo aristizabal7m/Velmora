@@ -1,0 +1,13 @@
+from typing import Protocol
+
+from velmora.domain.models import Category, Investment, InvestmentQuery, Lesson
+
+
+class InvestmentRepository(Protocol):
+    def list_investments(self, query: InvestmentQuery) -> list[Investment]: ...
+
+    def get_by_slug(self, slug: str) -> Investment | None: ...
+
+    def list_categories(self) -> list[Category]: ...
+
+    def list_lessons(self) -> list[Lesson]: ...

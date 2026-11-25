@@ -4,10 +4,10 @@ Cada ADR documenta una decisión importante, su contexto, alternativas y consecu
 
 | ADR | Estado | Decisión |
 | --- | --- | --- |
-| [ADR-001](0001-monorepo.md) | Propuesto | Un monorepo con API, web, Supabase y documentación |
-| [ADR-002](0002-vercel-fastapi.md) | Propuesto | Vercel para React/Vite y FastAPI, en dos proyectos |
-| [ADR-003](0003-rls-jwt-supabase.md) | Propuesto | JWT verificado, RLS y clientes separados por privilegios |
-| [ADR-004](0004-patrones-diseno.md) | Propuesto | Seis patrones GoF y patrones arquitectónicos adicionales |
+| [ADR-001](0001-monorepo.md) | Aceptado | Un monorepo con API, web, Supabase y documentación |
+| [ADR-002](0002-vercel-fastapi.md) | Aceptado | Vercel para React/Vite y FastAPI, en dos proyectos |
+| [ADR-003](0003-rls-jwt-supabase.md) | Aceptado | JWT verificado, RLS y clientes separados por privilegios |
+| [ADR-004](0004-patrones-diseno.md) | Aceptado | Seis patrones GoF y patrones arquitectónicos adicionales |
 
 ## Alcance inicial
 

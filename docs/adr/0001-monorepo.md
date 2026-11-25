@@ -1,7 +1,7 @@
 # ADR-001: Utilizar un monorepo para VELMORA
 
 - **Fecha:** 2026-11-22
-- **Estado:** Propuesto
+- **Estado:** Aceptado
 - **Decisores:** Equipo de VELMORA
 
 ## Contexto
@@ -29,7 +29,7 @@ velmora/
 └── docs/adr/
 ```
 
-Las rutas de ejemplo son conceptuales; durante la Fase 3 se crearán directorios reales, archivos `__init__.py` y el código de arranque necesario. Los despliegues y trabajos de CI operarán desde sus directorios correspondientes.
+La estructura ya está materializada en `apps/api`, `apps/web`, `supabase`, `docs` y `.github`. Cada aplicación tiene su propio archivo de configuración y ejecuta lint/typecheck/tests desde su directorio raíz.
 
 ## Alternativas consideradas
 
@@ -44,9 +44,9 @@ Las rutas de ejemplo son conceptuales; durante la Fase 3 se crearán directorios
 
 ## Verificación
 
-- Una persona puede clonar el repositorio e iniciar API y web siguiendo el README.
-- Un PR puede modificar API, web y migraciones de forma trazable.
-- Cada proyecto de Vercel identifica su `Root Directory` correcto.
+- `README.md` documenta `uv sync`, `npm install`, Supabase local y los comandos de verificación.
+- La CI ejecuta trabajos separados para API, web y Supabase desde sus directorios correspondientes.
+- Cada proyecto de Vercel declara su `Root Directory` (`apps/api` y `apps/web`) en la configuración de despliegue pendiente.
 
 ## Referencias
 

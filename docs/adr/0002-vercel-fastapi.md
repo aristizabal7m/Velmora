@@ -1,7 +1,7 @@
 # ADR-002: Desplegar React y FastAPI en Vercel
 
 - **Fecha:** 2026-11-22
-- **Estado:** Propuesto
+- **Estado:** Aceptado
 - **Decisores:** Equipo de VELMORA
 
 ## Contexto
@@ -21,7 +21,7 @@ Crear dos proyectos independientes en Vercel que usen el mismo repositorio:
 entrypoint = "velmora.main:app"
 ```
 
-El paquete `velmora` debe estar instalable/descubrible desde `src` en el entorno de despliegue; en Fase 9 se probará la configuración real y, si hace falta, se ajustará el empaquetado o se incluirá un adaptador `app.py` en la raíz del proyecto API.
+El adaptador `apps/api/api/index.py` añade `src` al `sys.path` y expone `app`, de modo que el paquete sea descubrible en el runtime serverless sin depender de instalación adicional.
 
 - `main` desplegará a producción; ramas/PRs crearán previsualizaciones. Las previsualizaciones deberán usar API y datos de **staging**, no una base de datos productiva con datos reales.
 - Definir CORS únicamente para orígenes conocidos y autorizados; nunca asumir que CORS sustituye autenticación o autorización.
@@ -41,10 +41,11 @@ El paquete `velmora` debe estar instalable/descubrible desde `src` en el entorno
 
 ## Verificación
 
-- `GET /health` responde en producción y staging.
+- `GET /health` responde localmente y está listo para los entornos remotos; falta ejecutar el despliegue real.
 - React consume la API mediante `VITE_API_URL` (variable pública que contiene solo la URL, no claves).
-- Los dos proyectos se reconstruyen desde el mismo repositorio y sus respectivos directorios raíz.
-- Se comprueba un flujo completo sin depender de memoria persistente en la función.
+- `apps/api/vercel.json` y `apps/web/vercel.json` definen builds/rutas para los respectivos `Root Directory`.
+- La caché del repositorio se limita al ámbito de una petición/usuario, sin asumir memoria persistente entre invocaciones.
+- Pendiente: crear los dos proyectos en Vercel, el proyecto Supabase de staging y verificar previsualizaciones con datos de staging.
 
 ## Referencias
 

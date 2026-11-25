@@ -1,7 +1,7 @@
 # ADR-003: Autenticación JWT, autorización con RLS y mínimos privilegios en Supabase
 
 - **Fecha:** 2026-11-22
-- **Estado:** Propuesto
+- **Estado:** Aceptado
 - **Decisores:** Equipo de VELMORA
 
 ## Contexto
@@ -32,11 +32,11 @@ VELMORA almacenará perfiles, progreso y marcadores privados por usuario, y cont
 
 ## Verificación
 
-- Usuario A no puede leer, modificar ni eliminar progresos/marcadores de B, tanto desde navegador como a través del backend.
-- Usuario anónimo solo puede leer contenido público publicado.
-- Un token alterado o expirado devuelve 401.
-- No existe ninguna clave `sb_secret_...` ni `service_role` en código fuente, logs, PRs o bundle del frontend.
-- Pruebas de RLS con Supabase local y pgTAP; pruebas de almacenamiento y roles.
+- `supabase/tests/rls.sql` verifica con pgTAP que un usuario no puede modificar progreso/marcadores ajenos y que el anónimo solo lee contenido publicado: `./node_modules/.bin/supabase test db` → 7 pruebas en verde.
+- `apps/api/tests/test_api.py` comprueba 401 en rutas protegidas, 403 para un usuario estándar en ruta admin y que `/auth/me` no devuelve el token.
+- `core/security.py` verifica firma JWKS, expiración, emisor y audiencia antes de aceptar un JWT.
+- `SUPABASE_SECRET_KEY` solo se lee desde el servidor en `AdminAccessFactory`; el bundle web usa exclusivamente la publishable key.
+- Storage separa `avatars` (privado) de `content-images` (público) y `UserStorageAccess` bloquea avatares.
 
 ## Referencias
 

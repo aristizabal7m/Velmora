@@ -1,7 +1,7 @@
 # ADR-004: Patrones de diseño que demostrará VELMORA
 
 - **Fecha:** 2026-11-22
-- **Estado:** Propuesto
+- **Estado:** Aceptado
 - **Decisores:** Equipo de VELMORA
 
 ## Contexto
@@ -44,6 +44,7 @@ La asignatura exige **al menos dos patrones GoF creacionales, dos estructurales 
 
 ## Verificación
 
-- Seis demostraciones independientes sin necesidad de producción.
-- Una matriz README mapea patrón → archivo → endpoint/caso de uso → test → diagrama UML.
-- `pytest` valida Builder, Abstract Factory, Adapter, Decorator, Strategy y Observer.
+- Seis demostraciones independientes sin necesidad de producción: los seis patrones están en `apps/api/src/velmora/patterns/` y se ejercitan desde endpoints reales o tests unitarios.
+- La matriz de `README.md` mapea patrón → archivo → caso de uso → test → diagrama UML.
+- `apps/api/tests/test_patterns.py` y `test_api.py` validan Builder, Abstract Factory, Adapter, Decorator, Strategy y Observer; `uv run pytest -q` → 21 pruebas en verde.
+- Los diagramas Mermaid están en `docs/uml/patrones.md`.
