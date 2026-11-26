@@ -15,7 +15,7 @@ VELMORA almacenará perfiles, progreso y marcadores privados por usuario, y cont
 3. Para consultas por usuario desde el backend, crear un **cliente Supabase con publishable key y JWT del usuario**, propagado por petición a la API de datos (PostgREST). De este modo el motor de Supabase puede evaluar las políticas RLS en el contexto correcto.
 4. Mantener un **cliente administrativo distinto**, con `sb_secret_...` (o `service_role` legado si fuera imprescindible), solo en un entorno de servidor seguro y después de autorizar explícitamente la operación. Nunca entregar estas claves al navegador, a builds Vite o al código de la app móvil.
 5. El **transaction pooler de PostgreSQL** será una opción solo para conexiones SQL necesarias en trabajos internos o casos justificados; conectarse mediante un usuario privilegiado a PostgreSQL no propaga automáticamente el JWT de Supabase ni hace cumplir las políticas de usuario. Las migraciones se ejecutarán desde CLI/CI con credenciales seguras, usando el método de conexión apropiado.
-6. Limitar CORS a orígenes conocidos. Configurar rutas de redirección Auth para local, staging y producción. Las políticas de Storage separarán `avatars` privado de `content-images` público.
+6. Limitar CORS a orígenes conocidos. Configurar rutas de redirección Auth para local y producción. Las políticas de Storage separarán `avatars` privado de `content-images` público.
 7. Registrar errores y eventos sin tokens JWT, contraseñas, claves, cookies de sesión ni datos sensibles.
 
 ## Alternativas consideradas

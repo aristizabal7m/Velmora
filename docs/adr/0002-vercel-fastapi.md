@@ -23,7 +23,7 @@ entrypoint = "velmora.main:app"
 
 El adaptador `apps/api/api/index.py` añade `src` al `sys.path` y expone `app`, de modo que el paquete sea descubrible en el runtime serverless sin depender de instalación adicional.
 
-- `main` desplegará a producción; ramas/PRs crearán previsualizaciones. Las previsualizaciones deberán usar API y datos de **staging**, no una base de datos productiva con datos reales.
+- `main` desplegará a producción; ramas/PRs crearán previsualizaciones para validar interfaz y compilación. El alcance no incluye un entorno de datos de staging separado.
 - Definir CORS únicamente para orígenes conocidos y autorizados; nunca asumir que CORS sustituye autenticación o autorización.
 - Los endpoints y funcionalidades estarán diseñados para no requerir procesos permanentes en memoria.
 
@@ -41,11 +41,11 @@ El adaptador `apps/api/api/index.py` añade `src` al `sys.path` y expone `app`, 
 
 ## Verificación
 
-- `GET /health` responde localmente y está listo para los entornos remotos; falta ejecutar el despliegue real.
+- `GET /health` responde 200 en el despliegue remoto con `environment=production`; la web y la API están desplegadas en Vercel.
 - React consume la API mediante `VITE_API_URL` (variable pública que contiene solo la URL, no claves).
 - `apps/api/vercel.json` y `apps/web/vercel.json` definen builds/rutas para los respectivos `Root Directory`.
 - La caché del repositorio se limita al ámbito de una petición/usuario, sin asumir memoria persistente entre invocaciones.
-- Pendiente: crear los dos proyectos en Vercel, el proyecto Supabase de staging y verificar previsualizaciones con datos de staging.
+- Previsualizaciones limitadas a validación de interfaz y compilación; no se crea entorno de datos de staging porque no entra dentro del alcance requerido. Las pruebas automatizadas usan Supabase local y no escriben en producción.
 
 ## Referencias
 

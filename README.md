@@ -66,7 +66,7 @@ cp apps/web/.env.example apps/web/.env
 
 | Ubicación | Variable | Uso |
 | --- | --- | --- |
-| API | `ENVIRONMENT` | `local`, `staging` o `production` |
+| API | `ENVIRONMENT` | `local` o `production` |
 | API | `SUPABASE_URL` | URL del proyecto Supabase |
 | API | `SUPABASE_PUBLISHABLE_KEY` | Clave pública; segura en cliente |
 | API | `SUPABASE_SECRET_KEY` | Solo servidor; habilita contexto admin |
@@ -95,7 +95,7 @@ cd apps/api && uv run pytest -q && uv run ruff check . && uv run mypy src tests
 cd apps/web && npm run typecheck && npm run lint && npm test && npm run build
 ```
 
-Estado actual verificado: 21 tests Python, 3 tests web y 7 pruebas pgTAP en verde; Ruff, mypy, oxlint, TypeScript y build sin errores.
+Estado actual verificado: 22 tests Python, 3 tests web y 7 pruebas pgTAP en verde; Ruff, mypy, oxlint, TypeScript y build sin errores.
 
 ## API
 
@@ -127,6 +127,30 @@ Seis patrones GoF (2 creacionales, 2 estructurales, 2 de comportamiento), con c�
 | Comportamiento | Strategy | `apps/api/src/velmora/patterns/strategy.py` | Recomendación conservadora/moderada/agresiva según perfil de riesgo | `test_strategy_can_change_at_runtime`, `test_recommendations_change_with_profile` | [Diagrama](docs/uml/patrones.md#strategy-comportamiento) |
 | Comportamiento | Observer | `apps/api/src/velmora/patterns/observer.py` | `LessonCompleted` notifica progreso y actividad | `test_observer_notifies_all_subscribers`, `test_lesson_completion_notifies_observers` | [Diagrama](docs/uml/patrones.md#observer-comportamiento) |
 
+### Abstract Factory
+
+Crea familias coherentes de acceso: `UserAccessFactory` usa el JWT del usuario y `AdminAccessFactory` la clave secreta del servidor. Así la API no decide credenciales ni privilegios en cada endpoint.
+
+### Builder
+
+`InvestmentQueryBuilder` construye filtros de inversión paso a paso, valida montos y rangos, y devuelve un `InvestmentQuery` inmutable. Centraliza las reglas de filtrado sin crear objetos a medias.
+
+### Adapter
+
+`StorageAccess` ofrece una interfaz única para obtener URLs públicas. `SupabaseStorageAdapter` la implementa con Supabase Storage y `InMemoryStorageAdapter` con una fuente local para pruebas.
+
+### Decorator
+
+`LoggingRepositoryDecorator` añade trazas y `CachingRepositoryDecorator` memoriza consultas por usuario y filtros. Ambos se apilan sobre `InvestmentRepository` sin modificar su código.
+
+### Strategy
+
+`RecommendationContext` selecciona entre estrategias conservadora, moderada y agresiva según el `profile`. Cada estrategia puntúa el riesgo de forma distinta y puede cambiar en tiempo de ejecución.
+
+### Observer
+
+`LessonCompletedPublisher` notifica el evento `LessonCompleted` a `ProgressObserver` y `ActivityObserver`. Al completar una lección se registra progreso y actividad sin acoplar el servicio a cada efecto.
+
 Patrones complementarios: Repository, Dependency Injection (`Depends`), Service Layer y Provider de React. No se contabilizan dentro del requisito 2+2+2.
 
 ## Arquitectura y seguridad
@@ -150,7 +174,7 @@ El proyecto Supabase remoto es `Velmora` (ref `qkhqafhsixdvvokacpvn`). La URL ba
 
 `CORS_ORIGINS` en la API debe incluir exactamente el origen de la web, actualmente `https://velmora-ten-pied.vercel.app`.
 
-`main` despliega a producción. No hay un proyecto Supabase de staging separado, por lo que las previsualizaciones de PR no deben apuntar a datos de producción y ADR-002 queda como deuda de entorno. La migración y el seed ya están aplicados al proyecto remoto; las pruebas RLS pasan en local y la verificación remota devuelve los mismos resultados.
+`main` despliega a producción y las previsualizaciones de PR se usan solo para validar interfaz y compilación. La migración y el seed ya están aplicados al proyecto remoto; las pruebas RLS pasan en local y la verificación remota devuelve los mismos resultados.
 
 ## Documentación
 
@@ -161,7 +185,7 @@ El proyecto Supabase remoto es `Velmora` (ref `qkhqafhsixdvvokacpvn`). La URL ba
 
 ## Estado
 
-Implementación funcional en local: API, web, Supabase local, RLS, patrones y pruebas. La migración y el seed remotos están aplicados; `/health` responde `production` y la web es pública. Los endpoints de datos en Vercel siguen devolviendo 500 por las variables de Supabase de la API: verificar `SUPABASE_URL` sin `/rest/v1/`, `SUPABASE_PUBLISHABLE_KEY` y `CORS_ORIGINS=https://velmora-ten-pied.vercel.app`, luego redeploy. Falta crear el proyecto de staging.
+Implementación funcional y verificada: API, web, Supabase local y remoto, RLS, seis patrones GoF y pruebas. En Vercel, la web responde 200 y la API responde 200 en `/health`, categorías, lecciones, inversiones y recomendaciones, con `Access-Control-Allow-Origin` para el origen de la web. La migración y el seed remotos están aplicados.
 
 ## Advertencia
 

@@ -13,7 +13,7 @@ class Settings(BaseSettings):
         case_sensitive=False,
     )
 
-    environment: Literal["local", "staging", "production"] = "local"
+    environment: Literal["local", "production"] = "local"
     supabase_url: str = ""
     supabase_publishable_key: str = ""
     supabase_secret_key: str = ""
