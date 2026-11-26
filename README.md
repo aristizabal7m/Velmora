@@ -141,12 +141,14 @@ Patrones complementarios: Repository, Dependency Injection (`Depends`), Service 
 
 Dos proyectos de Vercel sobre el mismo repositorio:
 
-| Proyecto | Root Directory | Salida |
-| --- | --- | --- |
-| `velmora-web` | `apps/web` | Vite (`dist/`) |
-| `velmora-api` | `apps/api` | Vercel Functions (`api/index.py`) |
+| Proyecto | Root Directory | Salida | URL |
+| --- | --- | --- | --- |
+| `velmora-web` | `apps/web` | Vite (`dist/`) | https://velmora-49d7p4xqk-aristi-s-projects.vercel.app/ |
+| `velmora-api` | `apps/api` | Vercel Functions (`api/index.py`) | https://velmora-woad.vercel.app/ |
 
-`main` despliega a producción. Las previsualizaciones de PR deben apuntar a variables de staging y a un proyecto Supabase de staging, nunca a producción. La migración y el seed al proyecto remoto confirmado (`Velmora`, ref `qkhqafhsixdvvokacpvn`) todavía están pendientes de ejecutar con credenciales seguras.
+El proyecto Supabase remoto es `Velmora` (ref `qkhqafhsixdvvokacpvn`). La URL base para `SUPABASE_URL` y `VITE_SUPABASE_URL` es `https://qkhqafhsixdvvokacpvn.supabase.co`; el endpoint REST es `https://qkhqafhsixdvvokacpvn.supabase.co/rest/v1/`.
+
+`main` despliega a producción. No hay un proyecto Supabase de staging separado, por lo que las previsualizaciones de PR no deben apuntar a datos de producción y ADR-002 queda como deuda de entorno. La migración y el seed al proyecto remoto todavía están pendientes de aplicación.
 
 ## Documentación
 
@@ -157,7 +159,7 @@ Dos proyectos de Vercel sobre el mismo repositorio:
 
 ## Estado
 
-Implementación funcional en local: API, web, Supabase local, RLS, patrones y pruebas. Pendiente: aplicar migración/seed al entorno remoto, crear el proyecto de staging y configurar los dos despliegues en Vercel.
+Implementación funcional en local: API, web, Supabase local, RLS, patrones y pruebas. Los dos despliegues en Vercel ya están creados, pero `/health` devuelve 500 y la web redirige al SSO de Vercel; pendiente de revisar las variables de entorno de la API, desactivar la protección de acceso de la web, aplicar migración/seed al entorno remoto y crear el proyecto de staging.
 
 ## Advertencia
 
