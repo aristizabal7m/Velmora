@@ -22,3 +22,11 @@ def complete_lesson(
     if not any(lesson.id == lesson_id for lesson in investments.lessons()):
         raise HTTPException(status_code=404, detail="Lección no encontrada")
     return progress.complete(user.id, lesson_id)
+
+
+@router.get("/progress")
+def lesson_progress(
+    user: AuthenticatedUser = Depends(get_current_user),
+    progress: ProgressService = Depends(get_progress_service),
+) -> list[UUID]:
+    return progress.completed_lesson_ids(user.id)

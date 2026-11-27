@@ -6,7 +6,8 @@ export interface AuthContextValue {
   token: string | null
   loading: boolean
   signIn: (email: string, password: string) => Promise<void>
-  signUp: (email: string, password: string) => Promise<void>
+  /** Devuelve true si Supabase exige confirmar el correo antes de ingresar. */
+  signUp: (email: string, password: string) => Promise<boolean>
   signOut: () => Promise<void>
 }
 

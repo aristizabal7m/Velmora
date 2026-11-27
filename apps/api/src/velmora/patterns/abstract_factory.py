@@ -1,11 +1,11 @@
 from abc import ABC, abstractmethod
-from dataclasses import replace
 from typing import Protocol
 
-from supabase import Client, create_client
+from supabase import Client
 
 from velmora.core.config import settings
 from velmora.core.errors import ValidationError
+from velmora.db.clients import admin_client, user_client
 from velmora.domain.models import (
     Category,
     Investment,
@@ -49,7 +49,9 @@ class AdminDataAccess:
         self._repository = repository
 
     def list_investments(self, query: InvestmentQuery) -> list[Investment]:
-        return self._repository.list_investments(replace(query, published_only=False))
+        return self._repository.list_investments(
+            query.model_copy(update={"published_only": False})
+        )
 
     def get_by_slug(self, slug: str) -> Investment | None:
         return self._repository.get_by_slug(slug)
@@ -89,11 +91,7 @@ class AccessFactory(ABC):
 
 class UserAccessFactory(AccessFactory):
     def __init__(self, jwt: str) -> None:
-        client = create_client(
-            settings.supabase_url, settings.supabase_publishable_key
-        )
-        client.postgrest.auth(jwt)
-        self._client: Client = client
+        self._client: Client = user_client(jwt)
 
     def create_data_access(self) -> DataAccess:
         return UserDataAccess(SupabaseInvestmentRepository(self._client))
@@ -106,9 +104,7 @@ class AdminAccessFactory(AccessFactory):
     def __init__(self) -> None:
         if not settings.supabase_secret_key:
             raise ValidationError("Falta la credencial administrativa de Supabase")
-        self._client: Client = create_client(
-            settings.supabase_url, settings.supabase_secret_key
-        )
+        self._client: Client = admin_client()
 
     def create_data_access(self) -> DataAccess:
         return AdminDataAccess(SupabaseInvestmentRepository(self._client))

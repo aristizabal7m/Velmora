@@ -1,4 +1,6 @@
+from datetime import datetime
 from typing import cast
+from uuid import UUID
 
 from supabase import Client
 
@@ -8,7 +10,11 @@ from velmora.domain.models import (
     InvestmentQuery,
     Lesson,
 )
-from velmora.repositories.base import InvestmentRepository
+from velmora.repositories.base import (
+    InvestmentRepository,
+    ProfileRepository,
+    ProgressRepository,
+)
 
 
 class SupabaseInvestmentRepository(InvestmentRepository):
@@ -23,9 +29,9 @@ class SupabaseInvestmentRepository(InvestmentRepository):
         if query.risk_level is not None:
             request = request.eq("risk_level", query.risk_level.value)
         if query.min_amount is not None:
-            request = request.gte("minimum_amount", float(query.min_amount))
+            request = request.gte("minimum_amount", str(query.min_amount))
         if query.max_amount is not None:
-            request = request.lte("minimum_amount", float(query.max_amount))
+            request = request.lte("minimum_amount", str(query.max_amount))
         if query.category_slug is not None:
             categories = self._client.table("categories").select("id").eq(
                 "slug", query.category_slug
@@ -71,3 +77,52 @@ class SupabaseInvestmentRepository(InvestmentRepository):
         )
         rows = cast("list[dict[str, object]]", response.data)
         return [Lesson.model_validate(row) for row in rows]
+
+
+class SupabaseProgressRepository(ProgressRepository):
+    """Usa el cliente del usuario: RLS limita cada fila a auth.uid()."""
+
+    def __init__(self, client: Client) -> None:
+        self._client = client
+
+    def mark_completed(
+        self, user_id: UUID, lesson_id: UUID, completed_at: datetime
+    ) -> None:
+        # ignore_duplicates -> ON CONFLICT DO NOTHING: solo requiere permiso INSERT.
+        self._client.table("user_progress").upsert(
+            {
+                "user_id": str(user_id),
+                "lesson_id": str(lesson_id),
+                "completed_at": completed_at.isoformat(),
+            },
+            on_conflict="user_id,lesson_id",
+            ignore_duplicates=True,
+        ).execute()
+
+    def completed_lesson_ids(self, user_id: UUID) -> list[UUID]:
+        response = (
+            self._client.table("user_progress")
+            .select("lesson_id")
+            .eq("user_id", str(user_id))
+            .execute()
+        )
+        rows = cast("list[dict[str, str]]", response.data)
+        return [UUID(row["lesson_id"]) for row in rows]
+
+
+class SupabaseProfileRepository(ProfileRepository):
+    def __init__(self, client: Client) -> None:
+        self._client = client
+
+    def get_role(self, user_id: UUID) -> str | None:
+        response = (
+            self._client.table("profiles")
+            .select("role")
+            .eq("id", str(user_id))
+            .maybe_single()
+            .execute()
+        )
+        if response is None or response.data is None:
+            return None
+        row = cast("dict[str, str]", response.data)
+        return row.get("role")

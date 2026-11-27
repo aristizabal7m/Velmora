@@ -9,6 +9,7 @@ export function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [notice, setNotice] = useState<string | null>(null)
   const { signIn, signUp } = useAuth()
   const navigate = useNavigate()
 
@@ -16,9 +17,15 @@ export function LoginPage() {
     event.preventDefault()
     setBusy(true)
     setError(null)
+    setNotice(null)
     try {
-      if (mode === 'login') await signIn(email, password)
-      else await signUp(email, password)
+      if (mode === 'login') {
+        await signIn(email, password)
+      } else if (await signUp(email, password)) {
+        setNotice('Te enviamos un correo de confirmación. Confírmalo y luego ingresa.')
+        setMode('login')
+        return
+      }
       navigate('/')
     } catch (reason: unknown) {
       setError(reason instanceof Error ? reason.message : 'Error desconocido')
@@ -61,6 +68,7 @@ export function LoginPage() {
             {error}
           </p>
         )}
+        {notice !== null && <p role="status">{notice}</p>}
         <button type="submit" disabled={busy || !isAuthConfigured}>
           {busy ? 'Procesando…' : mode === 'login' ? 'Ingresar' : 'Registrarme'}
         </button>

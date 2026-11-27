@@ -95,7 +95,7 @@ cd apps/api && uv run pytest -q && uv run ruff check . && uv run mypy src tests
 cd apps/web && npm run typecheck && npm run lint && npm test && npm run build
 ```
 
-Estado actual verificado: 22 tests Python, 3 tests web y 7 pruebas pgTAP en verde; Ruff, mypy, oxlint, TypeScript y build sin errores.
+Estado actual verificado: 30 tests Python, 4 tests web y 7 pruebas pgTAP en verde; Ruff, mypy, oxlint, TypeScript y build sin errores.
 
 ## API
 
@@ -105,12 +105,13 @@ Estado actual verificado: 22 tests Python, 3 tests web y 7 pruebas pgTAP en verd
 | `GET` | `/api/v1/investments` | Inversiones publicadas con filtros `risk`, `category`, `min_amount`, `max_amount` |
 | `GET` | `/api/v1/investments/recommendations` | Recomendaciones por `profile` |
 | `GET` | `/api/v1/investments/mine` | Contexto del usuario autenticado (401 si no hay JWT) |
-| `GET` | `/api/v1/investments/all` | Incluye no publicadas; requiere rol `admin` |
+| `GET` | `/api/v1/investments/all` | Incluye no publicadas; requiere `profiles.role = 'admin'` |
 | `GET` | `/api/v1/investments/{slug}` | Detalle de una inversión |
 | `GET` | `/api/v1/categories` | Categorías publicadas |
 | `GET` | `/api/v1/lessons` | Lecciones publicadas |
-| `POST` | `/api/v1/lessons/{id}/complete` | Registra progreso y notifica observadores |
-| `GET` | `/api/v1/auth/me` | Usuario actual sin exponer el token |
+| `POST` | `/api/v1/lessons/{id}/complete` | Guarda el progreso en `user_progress` (idempotente) y notifica observadores |
+| `GET` | `/api/v1/lessons/progress` | IDs de lecciones completadas por el usuario |
+| `GET` | `/api/v1/auth/me` | Usuario actual con su rol de aplicación, sin exponer el token |
 
 La documentación interactiva está en `/docs`.
 
@@ -158,6 +159,7 @@ Patrones complementarios: Repository, Dependency Injection (`Depends`), Service 
 - React llama a FastAPI usando `VITE_API_URL`; Supabase Auth se usa en el navegador solo con la publishable key.
 - FastAPI verifica JWT con JWKS (firma, `exp`, `iss`, `aud`) antes de propagar el token a PostgREST.
 - Los repositorios de usuario usan el JWT de la petición, por lo que RLS se evalúa con la identidad correcta. El cliente administrativo usa `SUPABASE_SECRET_KEY` únicamente en servidor.
+- El rol admin se lee de `public.profiles.role` (no del claim JWT `role`, que en Supabase siempre es `authenticated`). Los usuarios no pueden modificar esa columna; para promover a alguien: `update public.profiles set role = 'admin' where id = '<uuid>';` desde el SQL editor.
 - Las migraciones aplican RLS a todas las tablas de `public`; el contenido publicado es legible por anónimos y los datos privados por su propietario.
 - Storage separa `avatars` (privado) de `content-images` (público).
 

@@ -8,7 +8,10 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jwt import PyJWKClient
 
 from velmora.core.config import settings
+from velmora.db.clients import user_client
 from velmora.domain.models import AuthenticatedUser
+from velmora.repositories.base import ProfileRepository
+from velmora.repositories.supabase import SupabaseProfileRepository
 
 logger = logging.getLogger("velmora")
 _bearer = HTTPBearer(auto_error=False)
@@ -54,9 +57,29 @@ def get_current_user(
     return verify_token(credentials.credentials)
 
 
+def get_profile_repository(
+    user: AuthenticatedUser = Depends(get_current_user),
+) -> ProfileRepository:
+    return SupabaseProfileRepository(user_client(user.token))
+
+
+def get_app_role(
+    user: AuthenticatedUser = Depends(get_current_user),
+    profiles: ProfileRepository = Depends(get_profile_repository),
+) -> str:
+    """Rol de la aplicación según public.profiles.
+
+    El claim JWT `role` de Supabase es el rol de Postgres ("authenticated") y no
+    sirve para autorizar. La columna profiles.role no es editable por el usuario
+    (ver grants en la migración inicial).
+    """
+    return profiles.get_role(user.id) or "user"
+
+
 def require_admin(
     user: AuthenticatedUser = Depends(get_current_user),
+    role: str = Depends(get_app_role),
 ) -> AuthenticatedUser:
-    if user.role != "admin":
+    if role != "admin":
         raise HTTPException(status_code=403, detail="Permisos insuficientes")
     return user

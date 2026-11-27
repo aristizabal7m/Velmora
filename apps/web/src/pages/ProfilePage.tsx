@@ -38,7 +38,7 @@ export function ProfilePage() {
           <dd>{user.email ?? 'No disponible'}</dd>
         </div>
         <div>
-          <dt>Rol en la API</dt>
+          <dt>Rol</dt>
           <dd>{profile?.role ?? 'Cargando…'}</dd>
         </div>
       </dl>

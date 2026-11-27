@@ -6,11 +6,12 @@ import pytest
 from fastapi.testclient import TestClient
 
 from velmora.api.deps import (
-    get_admin_repository,
+    get_admin_data_access,
     get_investment_service,
+    get_progress_repository,
     get_user_repository,
 )
-from velmora.core.security import get_current_user
+from velmora.core.security import get_current_user, get_profile_repository
 from velmora.domain.models import (
     AuthenticatedUser,
     Category,
@@ -19,7 +20,12 @@ from velmora.domain.models import (
     RiskLevel,
 )
 from velmora.main import app
-from velmora.repositories.in_memory import InMemoryInvestmentRepository
+from velmora.patterns.abstract_factory import AdminDataAccess
+from velmora.repositories.in_memory import (
+    InMemoryInvestmentRepository,
+    InMemoryProfileRepository,
+    InMemoryProgressRepository,
+)
 from velmora.services.investments import InvestmentService
 
 
@@ -64,6 +70,17 @@ def repository(category: Category) -> InMemoryInvestmentRepository:
             published=True,
             disclaimer="No garantiza rendimientos.",
         ),
+        Investment(
+            id=uuid4(),
+            name="Borrador",
+            slug="borrador",
+            summary="Aún no publicada",
+            minimum_amount=Decimal("200000"),
+            risk_level=RiskLevel.MEDIO,
+            category_id=category.id,
+            published=False,
+            disclaimer="No garantiza rendimientos.",
+        ),
     ]
     lessons = [
         Lesson(
@@ -82,14 +99,23 @@ def user() -> AuthenticatedUser:
 
 
 @pytest.fixture
+def progress_repository() -> InMemoryProgressRepository:
+    return InMemoryProgressRepository()
+
+
+@pytest.fixture
 def client(
-    repository: InMemoryInvestmentRepository, user: AuthenticatedUser
+    repository: InMemoryInvestmentRepository,
+    user: AuthenticatedUser,
+    progress_repository: InMemoryProgressRepository,
 ) -> Iterator[TestClient]:
     app.dependency_overrides[get_investment_service] = (
         lambda: InvestmentService(repository)
     )
     app.dependency_overrides[get_user_repository] = lambda: repository
     app.dependency_overrides[get_current_user] = lambda: user
+    app.dependency_overrides[get_profile_repository] = InMemoryProfileRepository
+    app.dependency_overrides[get_progress_repository] = lambda: progress_repository
     with TestClient(app) as test_client:
         yield test_client
     app.dependency_overrides.clear()
@@ -99,12 +125,16 @@ def client(
 def admin_client(
     repository: InMemoryInvestmentRepository, user: AuthenticatedUser
 ) -> Iterator[TestClient]:
-    admin = user.model_copy(update={"role": "admin"})
     app.dependency_overrides[get_investment_service] = (
         lambda: InvestmentService(repository)
     )
-    app.dependency_overrides[get_admin_repository] = lambda: repository
-    app.dependency_overrides[get_current_user] = lambda: admin
+    app.dependency_overrides[get_admin_data_access] = lambda: AdminDataAccess(
+        repository
+    )
+    app.dependency_overrides[get_current_user] = lambda: user
+    app.dependency_overrides[get_profile_repository] = (
+        lambda: InMemoryProfileRepository({user.id: "admin"})
+    )
     with TestClient(app) as test_client:
         yield test_client
     app.dependency_overrides.clear()

@@ -1,10 +1,17 @@
+from datetime import datetime
+from uuid import UUID
+
 from velmora.domain.models import (
     Category,
     Investment,
     InvestmentQuery,
     Lesson,
 )
-from velmora.repositories.base import InvestmentRepository
+from velmora.repositories.base import (
+    InvestmentRepository,
+    ProfileRepository,
+    ProgressRepository,
+)
 
 
 class InMemoryInvestmentRepository(InvestmentRepository):
@@ -60,3 +67,24 @@ class InMemoryInvestmentRepository(InvestmentRepository):
 
     def list_lessons(self) -> list[Lesson]:
         return [lesson for lesson in self._lessons if lesson.published]
+
+
+class InMemoryProgressRepository(ProgressRepository):
+    def __init__(self) -> None:
+        self._completed: dict[tuple[UUID, UUID], datetime] = {}
+
+    def mark_completed(
+        self, user_id: UUID, lesson_id: UUID, completed_at: datetime
+    ) -> None:
+        self._completed.setdefault((user_id, lesson_id), completed_at)
+
+    def completed_lesson_ids(self, user_id: UUID) -> list[UUID]:
+        return [lesson for (owner, lesson) in self._completed if owner == user_id]
+
+
+class InMemoryProfileRepository(ProfileRepository):
+    def __init__(self, roles: dict[UUID, str] | None = None) -> None:
+        self._roles = roles or {}
+
+    def get_role(self, user_id: UUID) -> str | None:
+        return self._roles.get(user_id)

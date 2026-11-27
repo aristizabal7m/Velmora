@@ -1,7 +1,12 @@
+import logging
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Protocol
 from uuid import UUID
+
+from velmora.repositories.base import ProgressRepository
+
+logger = logging.getLogger("velmora")
 
 
 @dataclass(frozen=True)
@@ -28,8 +33,20 @@ class ActivityObserver:
         self.messages: list[str] = []
 
     def update(self, event: LessonCompleted) -> None:
-        self.messages.append(
-            f"Lección {event.lesson_id} completada por {event.user_id}"
+        message = f"Lección {event.lesson_id} completada por {event.user_id}"
+        self.messages.append(message)
+        logger.info(message)
+
+
+class PersistentProgressObserver:
+    """Guarda el progreso en user_progress (idempotente por usuario y lección)."""
+
+    def __init__(self, repository: ProgressRepository) -> None:
+        self._repository = repository
+
+    def update(self, event: LessonCompleted) -> None:
+        self._repository.mark_completed(
+            event.user_id, event.lesson_id, event.completed_at
         )
 
 

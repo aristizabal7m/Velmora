@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { InvestmentCard } from '../components/InvestmentCard'
 import { InvestmentFiltersForm } from '../components/InvestmentFiltersForm'
 import { useAuth } from '../hooks/useAuth'
+import { useDebouncedValue } from '../hooks/useDebouncedValue'
 import {
   getCategories,
   getInvestments,
@@ -13,6 +14,16 @@ import type {
   InvestmentFilters,
   Recommendation,
 } from '../types/api'
+
+const FILTER_DEBOUNCE_MS = 300
+
+function rangeError(filters: InvestmentFilters): string | null {
+  const { minAmount, maxAmount } = filters
+  if (minAmount && maxAmount && Number(minAmount) > Number(maxAmount)) {
+    return 'El monto mínimo no puede superar el máximo.'
+  }
+  return null
+}
 
 const initialFilters: InvestmentFilters = {
   risk: '',
@@ -29,6 +40,8 @@ export function ExplorePage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { token } = useAuth()
+  const debouncedFilters = useDebouncedValue(filters, FILTER_DEBOUNCE_MS)
+  const invalidRange = rangeError(debouncedFilters)
 
   useEffect(() => {
     let active = true
@@ -46,11 +59,12 @@ export function ExplorePage() {
   }, [])
 
   useEffect(() => {
+    if (invalidRange !== null) return
     let active = true
     void (async () => {
       if (active) setLoading(true)
       try {
-        const data = await getInvestments(filters, token)
+        const data = await getInvestments(debouncedFilters)
         if (!active) return
         setInvestments(data)
         setError(null)
@@ -64,7 +78,7 @@ export function ExplorePage() {
     return () => {
       active = false
     }
-  }, [filters, token])
+  }, [debouncedFilters, invalidRange])
 
   useEffect(() => {
     if (!token) return
@@ -100,7 +114,13 @@ export function ExplorePage() {
         onChange={setFilters}
       />
 
-      {error !== null && (
+      {invalidRange !== null && (
+        <p className="status-error" role="alert">
+          {invalidRange}
+        </p>
+      )}
+
+      {invalidRange === null && error !== null && (
         <p className="status-error" role="alert">
           No se pudieron cargar las inversiones: {error}
         </p>

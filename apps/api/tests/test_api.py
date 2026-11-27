@@ -2,7 +2,9 @@ from uuid import UUID
 
 from fastapi.testclient import TestClient
 
+from velmora.core.security import get_current_user
 from velmora.domain.models import AuthenticatedUser
+from velmora.main import app
 
 
 def test_list_investments_applies_filters(client: TestClient) -> None:
@@ -71,7 +73,27 @@ def test_admin_route_allows_admin(admin_client: TestClient) -> None:
     response = admin_client.get("/api/v1/investments/all")
 
     assert response.status_code == 200
-    assert len(response.json()) == 3
+    slugs = {item["slug"] for item in response.json()}
+    assert "borrador" in slugs
+    assert len(slugs) == 4
+
+
+def test_admin_role_comes_from_profile_not_jwt_claim(
+    client: TestClient, user: AuthenticatedUser
+) -> None:
+    # Aunque el claim JWT diga "admin", sin profiles.role = 'admin' se rechaza.
+    app.dependency_overrides[get_current_user] = lambda: user.model_copy(
+        update={"role": "admin"}
+    )
+    response = client.get("/api/v1/investments/all")
+
+    assert response.status_code == 403
+
+
+def test_public_list_hides_unpublished(client: TestClient) -> None:
+    response = client.get("/api/v1/investments")
+
+    assert "borrador" not in {item["slug"] for item in response.json()}
 
 
 def test_lesson_completion_notifies_observers(
@@ -81,6 +103,27 @@ def test_lesson_completion_notifies_observers(
 
     assert response.status_code == 200
     assert response.json()["lesson_id"] == str(lesson_id)
+
+
+def test_lesson_completion_is_persisted_and_idempotent(
+    client: TestClient, lesson_id: UUID
+) -> None:
+    assert client.get("/api/v1/lessons/progress").json() == []
+
+    client.post(f"/api/v1/lessons/{lesson_id}/complete")
+    client.post(f"/api/v1/lessons/{lesson_id}/complete")
+
+    assert client.get("/api/v1/lessons/progress").json() == [str(lesson_id)]
+
+
+def test_lesson_progress_requires_authentication(
+    anonymous_client: TestClient,
+) -> None:
+    assert anonymous_client.get("/api/v1/lessons/progress").status_code == 401
+
+
+def test_me_reports_application_role(client: TestClient) -> None:
+    assert client.get("/api/v1/auth/me").json()["role"] == "user"
 
 
 def test_invalid_amount_returns_422(client: TestClient) -> None:
