@@ -16,6 +16,7 @@ from velmora.domain.models import (
 from velmora.patterns.abstract_factory import (
     AccessFactory,
     AdminAccessFactory,
+    AdminDataAccess,
     AdminStorageAccess,
     DataAccess,
     UserDataAccess,
@@ -23,7 +24,7 @@ from velmora.patterns.abstract_factory import (
 )
 from velmora.patterns.adapter import InMemoryStorageAdapter, StorageAccess
 from velmora.patterns.builder import InvestmentQueryBuilder
-from velmora.patterns.decorator import decorate
+from velmora.patterns.decorator import TTLCache, decorate
 from velmora.patterns.observer import (
     ActivityObserver,
     LessonCompleted,
@@ -125,6 +126,35 @@ def test_cache_decorator_is_scoped_per_user() -> None:
 
     second.list_investments(query)
     assert repository.calls == 2
+
+
+def test_cache_decorator_expires_entries() -> None:
+    repository = CountingRepository()
+    cached = decorate(repository, "public", TTLCache(ttl_seconds=0))
+    query = InvestmentQuery()
+
+    cached.list_investments(query)
+    cached.list_investments(query)
+
+    assert repository.calls == 2
+
+
+def test_ttl_cache_is_bounded() -> None:
+    cache = TTLCache(ttl_seconds=60, max_entries=2)
+    for key in ("a", "b", "c"):
+        cache.set(key, [])
+
+    assert cache.get("a") is None
+    assert cache.get("c") == []
+
+
+def test_admin_data_access_includes_unpublished(
+    repository: InMemoryInvestmentRepository,
+) -> None:
+    admin = AdminDataAccess(repository)
+
+    assert len(admin.list_investments(InvestmentQuery())) == 4
+    assert len(repository.list_investments(InvestmentQuery())) == 3
 
 
 def test_strategy_can_change_at_runtime(

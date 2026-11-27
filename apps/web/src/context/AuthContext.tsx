@@ -36,8 +36,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
       signUp: async (email, password) => {
         if (!supabase) throw new Error('Autenticación no configurada')
-        const { error } = await supabase.auth.signUp({ email, password })
+        const { data, error } = await supabase.auth.signUp({ email, password })
         if (error) throw new Error(error.message)
+        return data.session === null
       },
       signOut: async () => {
         if (!supabase) return

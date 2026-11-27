@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
-import { completeLesson, getLessons } from '../lib/api'
+import { completeLesson, getLessonProgress, getLessons } from '../lib/api'
 import type { Lesson } from '../types/api'
 
 export function LessonsPage() {
@@ -17,16 +17,33 @@ export function LessonsPage() {
       })
   }, [])
 
+  useEffect(() => {
+    if (!token) return
+    let active = true
+    getLessonProgress(token)
+      .then((ids) => {
+        if (active) setCompleted(ids)
+      })
+      .catch(() => {
+        // Sin progreso previo visible; las acciones nuevas siguen funcionando.
+      })
+    return () => {
+      active = false
+    }
+  }, [token])
+
   async function markComplete(id: string) {
     if (!token) return
     try {
       await completeLesson(id, token)
-      setCompleted((previous) => [...previous, id])
+      setCompleted((previous) => (previous.includes(id) ? previous : [...previous, id]))
       setError(null)
     } catch (reason: unknown) {
       setError(reason instanceof Error ? reason.message : 'Error desconocido')
     }
   }
+
+  const completedIds = token ? completed : []
 
   return (
     <main className="main-content">
@@ -45,10 +62,10 @@ export function LessonsPage() {
             {user && (
               <button
                 type="button"
-                disabled={completed.includes(lesson.id)}
+                disabled={completedIds.includes(lesson.id)}
                 onClick={() => void markComplete(lesson.id)}
               >
-                {completed.includes(lesson.id) ? 'Completada' : 'Marcar completada'}
+                {completedIds.includes(lesson.id) ? 'Completada' : 'Marcar completada'}
               </button>
             )}
           </article>

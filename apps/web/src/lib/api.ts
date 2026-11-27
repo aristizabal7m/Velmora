@@ -68,6 +68,13 @@ export function getMe(token: string): Promise<CurrentUser> {
   return apiFetch<CurrentUser>('/api/v1/auth/me', authInit(token))
 }
 
-export function completeLesson(id: string, token: string): Promise<void> {
-  return apiFetch<void>(`/api/v1/lessons/${id}/complete`, authInit(token, { method: 'POST' }))
+export async function completeLesson(id: string, token: string): Promise<void> {
+  await apiFetch<unknown>(
+    `/api/v1/lessons/${encodeURIComponent(id)}/complete`,
+    authInit(token, { method: 'POST' }),
+  )
+}
+
+export function getLessonProgress(token: string): Promise<string[]> {
+  return apiFetch<string[]>('/api/v1/lessons/progress', authInit(token))
 }

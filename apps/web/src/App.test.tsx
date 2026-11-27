@@ -9,6 +9,7 @@ vi.mock('./lib/api', () => ({
   getInvestments: vi.fn(),
   getRecommendations: vi.fn(),
   getLessons: vi.fn(),
+  getLessonProgress: vi.fn(),
 }))
 
 const investment: Investment = {
@@ -61,8 +62,25 @@ describe('App', () => {
     await waitFor(() => {
       expect(getInvestments).toHaveBeenCalledWith(
         expect.objectContaining({ risk: 'alto' }),
-        null,
       )
     })
+  })
+
+  it('no consulta la API si el mínimo supera al máximo', async () => {
+    render(<App />)
+    await screen.findByText('CDT bancario')
+    vi.mocked(getInvestments).mockClear()
+
+    fireEvent.change(screen.getByLabelText('Monto mínimo (COP)'), {
+      target: { value: '500' },
+    })
+    fireEvent.change(screen.getByLabelText('Monto máximo (COP)'), {
+      target: { value: '100' },
+    })
+
+    expect(
+      await screen.findByText('El monto mínimo no puede superar el máximo.'),
+    ).toBeInTheDocument()
+    expect(getInvestments).not.toHaveBeenCalled()
   })
 })

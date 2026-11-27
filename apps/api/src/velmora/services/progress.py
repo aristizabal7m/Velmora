@@ -5,11 +5,15 @@ from velmora.patterns.observer import (
     LessonCompleted,
     LessonCompletedPublisher,
 )
+from velmora.repositories.base import ProgressRepository
 
 
 class ProgressService:
-    def __init__(self, publisher: LessonCompletedPublisher) -> None:
+    def __init__(
+        self, publisher: LessonCompletedPublisher, repository: ProgressRepository
+    ) -> None:
         self._publisher = publisher
+        self._repository = repository
 
     def complete(self, user_id: UUID, lesson_id: UUID) -> LessonCompleted:
         event = LessonCompleted(
@@ -19,3 +23,6 @@ class ProgressService:
         )
         self._publisher.notify(event)
         return event
+
+    def completed_lesson_ids(self, user_id: UUID) -> list[UUID]:
+        return self._repository.completed_lesson_ids(user_id)
