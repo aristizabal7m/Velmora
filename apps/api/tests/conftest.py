@@ -88,7 +88,13 @@ def repository(category: Category) -> InMemoryInvestmentRepository:
             title="Qué es una inversión",
             slug="que-es-una-inversion",
             content="Texto",
-        )
+        ),
+        Lesson(
+            id=uuid4(),
+            title="Riesgo y rentabilidad",
+            slug="riesgo-y-rentabilidad",
+            content="Texto",
+        ),
     ]
     return InMemoryInvestmentRepository(investments, [category], lessons)
 
@@ -104,17 +110,23 @@ def progress_repository() -> InMemoryProgressRepository:
 
 
 @pytest.fixture
+def profile_repository() -> InMemoryProfileRepository:
+    return InMemoryProfileRepository()
+
+
+@pytest.fixture
 def client(
     repository: InMemoryInvestmentRepository,
     user: AuthenticatedUser,
     progress_repository: InMemoryProgressRepository,
+    profile_repository: InMemoryProfileRepository,
 ) -> Iterator[TestClient]:
     app.dependency_overrides[get_investment_service] = (
         lambda: InvestmentService(repository)
     )
     app.dependency_overrides[get_user_repository] = lambda: repository
     app.dependency_overrides[get_current_user] = lambda: user
-    app.dependency_overrides[get_profile_repository] = InMemoryProfileRepository
+    app.dependency_overrides[get_profile_repository] = lambda: profile_repository
     app.dependency_overrides[get_progress_repository] = lambda: progress_repository
     with TestClient(app) as test_client:
         yield test_client
@@ -153,3 +165,12 @@ def anonymous_client(repository: InMemoryInvestmentRepository) -> Iterator[TestC
 @pytest.fixture
 def lesson_id(repository: InMemoryInvestmentRepository) -> UUID:
     return repository.list_lessons()[0].id
+
+
+@pytest.fixture
+def risk_lesson_id(repository: InMemoryInvestmentRepository) -> UUID:
+    return next(
+        lesson.id
+        for lesson in repository.list_lessons()
+        if lesson.slug == "riesgo-y-rentabilidad"
+    )

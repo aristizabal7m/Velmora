@@ -1,6 +1,10 @@
 from fastapi import Depends
 
-from velmora.core.security import get_current_user, require_admin
+from velmora.core.security import (
+    get_current_user,
+    get_profile_repository,
+    require_admin,
+)
 from velmora.db.clients import anonymous_client, user_client
 from velmora.domain.models import AuthenticatedUser
 from velmora.patterns.abstract_factory import (
@@ -14,12 +18,17 @@ from velmora.patterns.observer import (
     LessonCompletedPublisher,
     PersistentProgressObserver,
 )
-from velmora.repositories.base import InvestmentRepository, ProgressRepository
+from velmora.repositories.base import (
+    InvestmentRepository,
+    ProfileRepository,
+    ProgressRepository,
+)
 from velmora.repositories.supabase import (
     SupabaseInvestmentRepository,
     SupabaseProgressRepository,
 )
 from velmora.services.investments import InvestmentService
+from velmora.services.profile import ProfileService
 from velmora.services.progress import ProgressService
 
 # Cachés de proceso: sobreviven entre peticiones dentro de la misma instancia.
@@ -86,3 +95,11 @@ def get_progress_service(
     publisher.subscribe(PersistentProgressObserver(repository))
     publisher.subscribe(ActivityObserver())
     return ProgressService(publisher, repository)
+
+
+def get_profile_service(
+    profiles: ProfileRepository = Depends(get_profile_repository),
+    progress: ProgressRepository = Depends(get_progress_repository),
+    catalog: InvestmentService = Depends(get_investment_service),
+) -> ProfileService:
+    return ProfileService(profiles, progress, catalog)

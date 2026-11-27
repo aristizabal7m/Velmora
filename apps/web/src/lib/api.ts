@@ -5,6 +5,7 @@ import type {
   Investment,
   InvestmentFilters,
   Lesson,
+  MyProfile,
   Recommendation,
   RiskProfile,
 } from '../types/api'
@@ -21,10 +22,20 @@ function authInit(token: string | null, init?: RequestInit): RequestInit {
   }
 }
 
+async function errorMessage(response: Response): Promise<string> {
+  try {
+    const body = (await response.json()) as { detail?: unknown }
+    if (typeof body.detail === 'string') return body.detail
+  } catch {
+    // Respuesta sin JSON: se usa el mensaje genérico.
+  }
+  return `La API respondió ${response.status}`
+}
+
 export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_URL}${path}`, init)
   if (!response.ok) {
-    throw new Error(`La API respondió ${response.status}`)
+    throw new Error(await errorMessage(response))
   }
   return (await response.json()) as T
 }
@@ -77,4 +88,29 @@ export async function completeLesson(id: string, token: string): Promise<void> {
 
 export function getLessonProgress(token: string): Promise<string[]> {
   return apiFetch<string[]>('/api/v1/lessons/progress', authInit(token))
+}
+
+export function getMyProfile(token: string): Promise<MyProfile> {
+  return apiFetch<MyProfile>('/api/v1/profile', authInit(token))
+}
+
+export function saveRiskProfile(
+  riskProfile: RiskProfile,
+  token: string,
+): Promise<MyProfile> {
+  return apiFetch<MyProfile>(
+    '/api/v1/profile/risk-profile',
+    authInit(token, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ risk_profile: riskProfile }),
+    }),
+  )
+}
+
+export function getMyRecommendations(token: string): Promise<Recommendation[]> {
+  return apiFetch<Recommendation[]>(
+    '/api/v1/investments/recommendations/me',
+    authInit(token),
+  )
 }

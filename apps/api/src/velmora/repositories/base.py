@@ -2,7 +2,14 @@ from datetime import datetime
 from typing import Protocol
 from uuid import UUID
 
-from velmora.domain.models import Category, Investment, InvestmentQuery, Lesson
+from velmora.domain.models import (
+    Category,
+    Investment,
+    InvestmentQuery,
+    Lesson,
+    Profile,
+    RiskProfile,
+)
 
 
 class InvestmentRepository(Protocol):
@@ -25,3 +32,7 @@ class ProgressRepository(Protocol):
 
 class ProfileRepository(Protocol):
     def get_role(self, user_id: UUID) -> str | None: ...
+
+    def get_profile(self, user_id: UUID) -> Profile | None: ...
+
+    def set_risk_profile(self, user_id: UUID, risk_profile: RiskProfile) -> Profile: ...

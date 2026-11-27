@@ -54,3 +54,14 @@ export interface InvestmentFilters {
   minAmount: string
   maxAmount: string
 }
+
+export interface MyProfile {
+  id: string
+  display_name: string | null
+  role: string
+  risk_profile: RiskProfile | null
+  completed_lessons: number
+  total_lessons: number
+  risk_lesson_id: string | null
+  can_choose_risk_profile: boolean
+}

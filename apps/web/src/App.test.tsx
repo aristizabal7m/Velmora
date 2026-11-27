@@ -10,6 +10,8 @@ vi.mock('./lib/api', () => ({
   getRecommendations: vi.fn(),
   getLessons: vi.fn(),
   getLessonProgress: vi.fn(),
+  getMyProfile: vi.fn(),
+  getMyRecommendations: vi.fn(),
 }))
 
 const investment: Investment = {

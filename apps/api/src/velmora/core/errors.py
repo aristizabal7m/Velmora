@@ -11,6 +11,10 @@ class ValidationError(ValueError):
     pass
 
 
+class PreconditionError(Exception):
+    """La acción es válida pero el usuario aún no cumple un requisito previo."""
+
+
 def register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(HTTPException)
     async def http_exception_handler(
@@ -40,6 +44,12 @@ def register_exception_handlers(app: FastAPI) -> None:
         _request: Request, exc: ValidationError
     ) -> JSONResponse:
         return JSONResponse(status_code=422, content={"detail": str(exc)})
+
+    @app.exception_handler(PreconditionError)
+    async def precondition_handler(
+        _request: Request, exc: PreconditionError
+    ) -> JSONResponse:
+        return JSONResponse(status_code=409, content={"detail": str(exc)})
 
     @app.exception_handler(Exception)
     async def unhandled_exception_handler(

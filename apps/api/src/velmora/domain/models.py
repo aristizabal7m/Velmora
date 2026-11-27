@@ -91,3 +91,20 @@ class Recommendation(ORMModel):
     investment: Investment
     score: float
     reason: str
+
+
+class MyProfile(ORMModel):
+    """Vista del perfil propio con el progreso que habilita el perfil de riesgo."""
+
+    id: UUID
+    display_name: str | None = None
+    role: str = "user"
+    risk_profile: RiskProfile | None = None
+    completed_lessons: int
+    total_lessons: int
+    risk_lesson_id: UUID | None = None
+    can_choose_risk_profile: bool
+
+
+class RiskProfileUpdate(BaseModel):
+    risk_profile: RiskProfile

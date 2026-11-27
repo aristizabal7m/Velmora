@@ -9,6 +9,8 @@ from velmora.domain.models import (
     Investment,
     InvestmentQuery,
     Lesson,
+    Profile,
+    RiskProfile,
 )
 from velmora.repositories.base import (
     InvestmentRepository,
@@ -126,3 +128,35 @@ class SupabaseProfileRepository(ProfileRepository):
             return None
         row = cast("dict[str, str]", response.data)
         return row.get("role")
+
+    def get_profile(self, user_id: UUID) -> Profile | None:
+        response = (
+            self._client.table("profiles")
+            .select("id, display_name, role, risk_profile")
+            .eq("id", str(user_id))
+            .maybe_single()
+            .execute()
+        )
+        if response is None or response.data is None:
+            return None
+        return Profile.model_validate(cast("dict[str, object]", response.data))
+
+    def set_risk_profile(self, user_id: UUID, risk_profile: RiskProfile) -> Profile:
+        # Solo UPDATE/INSERT de columnas permitidas por los grants; RLS exige
+        # que la fila sea del propio usuario.
+        updated = (
+            self._client.table("profiles")
+            .update({"risk_profile": risk_profile.value})
+            .eq("id", str(user_id))
+            .execute()
+        )
+        rows = cast("list[dict[str, object]]", updated.data)
+        if not rows:
+            # Usuarios creados antes del trigger handle_new_user no tienen fila.
+            inserted = (
+                self._client.table("profiles")
+                .insert({"id": str(user_id), "risk_profile": risk_profile.value})
+                .execute()
+            )
+            rows = cast("list[dict[str, object]]", inserted.data)
+        return Profile.model_validate(rows[0])
