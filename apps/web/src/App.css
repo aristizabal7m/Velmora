@@ -222,3 +222,55 @@
   background: var(--surface);
   text-align: center;
 }
+
+.risk-picker {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.risk-picker fieldset {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.risk-picker legend {
+  padding: 0 4px;
+  font-weight: 600;
+  color: var(--text-strong);
+}
+
+.risk-option {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  cursor: pointer;
+}
+
+.risk-option span {
+  display: grid;
+  gap: 2px;
+}
+
+.risk-picker button {
+  justify-self: start;
+  padding: 8px 14px;
+  border: 1px solid var(--brand);
+  border-radius: 8px;
+  background: var(--brand);
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.risk-picker button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.progress-note {
+  color: var(--text);
+}

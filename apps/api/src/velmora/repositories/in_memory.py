@@ -6,6 +6,8 @@ from velmora.domain.models import (
     Investment,
     InvestmentQuery,
     Lesson,
+    Profile,
+    RiskProfile,
 )
 from velmora.repositories.base import (
     InvestmentRepository,
@@ -84,7 +86,20 @@ class InMemoryProgressRepository(ProgressRepository):
 
 class InMemoryProfileRepository(ProfileRepository):
     def __init__(self, roles: dict[UUID, str] | None = None) -> None:
-        self._roles = roles or {}
+        self._profiles = {
+            user_id: Profile(id=user_id, role=role)
+            for user_id, role in (roles or {}).items()
+        }
 
     def get_role(self, user_id: UUID) -> str | None:
-        return self._roles.get(user_id)
+        profile = self._profiles.get(user_id)
+        return profile.role if profile is not None else None
+
+    def get_profile(self, user_id: UUID) -> Profile | None:
+        return self._profiles.get(user_id)
+
+    def set_risk_profile(self, user_id: UUID, risk_profile: RiskProfile) -> Profile:
+        current = self._profiles.get(user_id, Profile(id=user_id))
+        updated = current.model_copy(update={"risk_profile": risk_profile})
+        self._profiles[user_id] = updated
+        return updated

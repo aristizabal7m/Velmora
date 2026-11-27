@@ -95,7 +95,7 @@ cd apps/api && uv run pytest -q && uv run ruff check . && uv run mypy src tests
 cd apps/web && npm run typecheck && npm run lint && npm test && npm run build
 ```
 
-Estado actual verificado: 30 tests Python, 4 tests web y 7 pruebas pgTAP en verde; Ruff, mypy, oxlint, TypeScript y build sin errores.
+Estado actual verificado: 35 tests Python, 5 tests web y 7 pruebas pgTAP en verde; Ruff, mypy, oxlint, TypeScript y build sin errores.
 
 ## API
 
@@ -104,6 +104,7 @@ Estado actual verificado: 30 tests Python, 4 tests web y 7 pruebas pgTAP en verd
 | `GET` | `/health` | Estado del servicio y entorno |
 | `GET` | `/api/v1/investments` | Inversiones publicadas con filtros `risk`, `category`, `min_amount`, `max_amount` |
 | `GET` | `/api/v1/investments/recommendations` | Recomendaciones por `profile` |
+| `GET` | `/api/v1/investments/recommendations/me` | Recomendaciones según el perfil de riesgo guardado (409 si no hay) |
 | `GET` | `/api/v1/investments/mine` | Contexto del usuario autenticado (401 si no hay JWT) |
 | `GET` | `/api/v1/investments/all` | Incluye no publicadas; requiere `profiles.role = 'admin'` |
 | `GET` | `/api/v1/investments/{slug}` | Detalle de una inversión |
@@ -111,9 +112,17 @@ Estado actual verificado: 30 tests Python, 4 tests web y 7 pruebas pgTAP en verd
 | `GET` | `/api/v1/lessons` | Lecciones publicadas |
 | `POST` | `/api/v1/lessons/{id}/complete` | Guarda el progreso en `user_progress` (idempotente) y notifica observadores |
 | `GET` | `/api/v1/lessons/progress` | IDs de lecciones completadas por el usuario |
+| `GET` | `/api/v1/profile` | Perfil propio: rol, perfil de riesgo y progreso de lecciones |
+| `PUT` | `/api/v1/profile/risk-profile` | Guarda el perfil de riesgo; requiere completar «Riesgo y rentabilidad» (409 si no) |
 | `GET` | `/api/v1/auth/me` | Usuario actual con su rol de aplicación, sin exponer el token |
 
 La documentación interactiva está en `/docs`.
+
+### Flujo lecciones → perfil de riesgo → recomendaciones
+
+1. El usuario completa la lección `riesgo-y-rentabilidad` (slug en `services/profile.py`).
+2. Eso habilita elegir su perfil de riesgo (conservador, moderado o agresivo), guardado en `profiles.risk_profile`. La API rechaza con 409 si la lección no está completada; si la lección no existe o no está publicada, no se bloquea.
+3. Explorar pide `/investments/recommendations/me`, que elige la estrategia de recomendación (patrón Strategy) según el perfil guardado.
 
 ## Patrones de diseño
 

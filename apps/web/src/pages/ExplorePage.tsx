@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { InvestmentCard } from '../components/InvestmentCard'
 import { InvestmentFiltersForm } from '../components/InvestmentFiltersForm'
 import { useAuth } from '../hooks/useAuth'
 import { useDebouncedValue } from '../hooks/useDebouncedValue'
+import { useMyProfile } from '../hooks/useMyProfile'
+import { riskProfileLabel } from '../lib/riskProfiles'
 import {
   getCategories,
   getInvestments,
-  getRecommendations,
+  getMyRecommendations,
 } from '../lib/api'
 import type {
   Category,
@@ -40,6 +43,8 @@ export function ExplorePage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { token } = useAuth()
+  const { profile } = useMyProfile(token)
+  const riskProfile = profile?.risk_profile ?? null
   const debouncedFilters = useDebouncedValue(filters, FILTER_DEBOUNCE_MS)
   const invalidRange = rangeError(debouncedFilters)
 
@@ -81,11 +86,11 @@ export function ExplorePage() {
   }, [debouncedFilters, invalidRange])
 
   useEffect(() => {
-    if (!token) return
+    if (!token || !riskProfile) return
     let active = true
     void (async () => {
       try {
-        const data = await getRecommendations('moderado', token)
+        const data = await getMyRecommendations(token)
         if (active) setRecommendations(data)
       } catch {
         if (active) setRecommendations([])
@@ -94,9 +99,9 @@ export function ExplorePage() {
     return () => {
       active = false
     }
-  }, [token])
+  }, [token, riskProfile])
 
-  const visibleRecommendations = token ? recommendations : []
+  const visibleRecommendations = token && riskProfile ? recommendations : []
 
   return (
     <main className="main-content">
@@ -140,9 +145,29 @@ export function ExplorePage() {
         </section>
       )}
 
+      {profile && !riskProfile && (
+        <section className="investment-card" aria-labelledby="profile-cta-title">
+          <h2 id="profile-cta-title">Recibe sugerencias según tu perfil</h2>
+          <p>
+            {profile.can_choose_risk_profile ? (
+              <>
+                Ya puedes <Link to="/perfil">definir tu perfil de riesgo</Link>.
+              </>
+            ) : (
+              <>
+                Completa la lección <Link to="/lecciones">«Riesgo y rentabilidad»</Link>{' '}
+                y define tu perfil de riesgo para ver sugerencias.
+              </>
+            )}
+          </p>
+        </section>
+      )}
+
       {visibleRecommendations.length > 0 && (
         <section aria-labelledby="recommendations-title">
-          <h2 id="recommendations-title">Sugerencias para tu perfil</h2>
+          <h2 id="recommendations-title">
+            Sugerencias para tu perfil {riskProfileLabel(riskProfile).toLowerCase()}
+          </h2>
           <p className="disclaimer">
             Sugerencias educativas basadas en riesgo; no prometen rentabilidad.
           </p>

@@ -5,16 +5,20 @@ from fastapi import APIRouter, Depends, HTTPException
 from velmora.api.deps import (
     get_admin_investment_service,
     get_investment_service,
+    get_profile_service,
     get_user_investment_service,
 )
 from velmora.core.errors import ValidationError
+from velmora.core.security import get_current_user
 from velmora.domain.models import (
+    AuthenticatedUser,
     Investment,
     Recommendation,
     RiskLevel,
     RiskProfile,
 )
 from velmora.services.investments import InvestmentService
+from velmora.services.profile import ProfileService
 
 router = APIRouter(prefix="/investments", tags=["inversiones"])
 
@@ -39,6 +43,15 @@ def recommendations(
     service: InvestmentService = Depends(get_investment_service),
 ) -> list[Recommendation]:
     return service.recommendations(profile)
+
+
+@router.get("/recommendations/me")
+def my_recommendations(
+    user: AuthenticatedUser = Depends(get_current_user),
+    profiles: ProfileService = Depends(get_profile_service),
+) -> list[Recommendation]:
+    """Recomendaciones según el perfil de riesgo guardado (409 si no hay)."""
+    return profiles.recommendations(user.id)
 
 
 @router.get("/mine")

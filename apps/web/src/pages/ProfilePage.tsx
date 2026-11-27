@@ -1,24 +1,14 @@
-import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { RiskProfilePicker } from '../components/RiskProfilePicker'
 import { useAuth } from '../hooks/useAuth'
-import { getMe } from '../lib/api'
-import type { CurrentUser } from '../types/api'
+import { useMyProfile } from '../hooks/useMyProfile'
+import { riskProfileLabel } from '../lib/riskProfiles'
 
 export function ProfilePage() {
   const { user, token } = useAuth()
-  const [profile, setProfile] = useState<CurrentUser | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const { profile, error, setProfile } = useMyProfile(token)
 
-  useEffect(() => {
-    if (!token) return
-    getMe(token)
-      .then(setProfile)
-      .catch((reason: unknown) => {
-        setError(reason instanceof Error ? reason.message : 'Error desconocido')
-      })
-  }, [token])
-
-  if (!user) {
+  if (!user || !token) {
     return (
       <main className="main-content">
         <h1>Perfil</h1>
@@ -41,7 +31,34 @@ export function ProfilePage() {
           <dt>Rol</dt>
           <dd>{profile?.role ?? 'Cargando…'}</dd>
         </div>
+        <div>
+          <dt>Lecciones</dt>
+          <dd>
+            {profile
+              ? `${profile.completed_lessons} de ${profile.total_lessons} completadas`
+              : 'Cargando…'}
+          </dd>
+        </div>
+        <div>
+          <dt>Perfil de riesgo</dt>
+          <dd>{profile ? riskProfileLabel(profile.risk_profile) : 'Cargando…'}</dd>
+        </div>
       </dl>
+
+      {profile && !profile.can_choose_risk_profile && (
+        <p>
+          Completa la lección <Link to="/lecciones">«Riesgo y rentabilidad»</Link> para
+          definir tu perfil de riesgo.
+        </p>
+      )}
+      {profile?.can_choose_risk_profile && (
+        <RiskProfilePicker
+          token={token}
+          current={profile.risk_profile}
+          onSaved={setProfile}
+        />
+      )}
+
       {error !== null && (
         <p className="status-error" role="alert">
           {error}
